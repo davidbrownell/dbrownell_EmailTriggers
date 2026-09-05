@@ -3,5 +3,5 @@ name = "dbrownell-emailtriggers"
 version = "0.1.0"
 description = "Scripts run when email is received."
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.14"
 dependencies = []
