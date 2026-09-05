@@ -84,7 +84,7 @@ def _ParseMessage(raw_message: str) -> MessageInfo:
             """\
             (?P<headers>.+?)
 
-            (?P<content>/+)""",
+            (?P<content>.+)""",
         ),
         raw_message,
         re.MULTILINE | re.DOTALL,
