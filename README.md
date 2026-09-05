@@ -2,16 +2,16 @@
 
 Scripts run when email is received.
 
-Requires Python 3.14 (see [.python-version](.python-version)).
+Requires Python 3.14.
 
 ## Local development
 
-Managed with [uv](https://docs.astral.sh/uv/):
+Dependencies are declared in [requirements.txt](requirements.txt):
 
 ```bash
-uv venv
-uv sync
-uv run main.py
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python main.py
 ```
 
 ## Deploying to Bluehost
@@ -117,17 +117,13 @@ cd .venv/bin && rm -f python3 "python${PYVER}" \
   && ln python python3 && ln python "python${PYVER}" && cd ../..
 ```
 
-#### 5. Sync and run
+#### 5. Install dependencies and run
 
-`uv sync` works against the manually created `.venv` and will not try to replace
-the interpreter. If `uv` is not already on the host, it installs as a single
-static binary:
+`pip` ships with the python-build-standalone build, so nothing else needs to be
+installed on the host:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-
-uv sync
+.venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python main.py
 ```
 
