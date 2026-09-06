@@ -1,0 +1,5 @@
+{
+  "hostname": "hosting.example.com",
+  "username": "example_user",
+  "cpanel_api_token": "example_token"
+}

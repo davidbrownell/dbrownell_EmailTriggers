@@ -134,7 +134,7 @@ def EntryPoint(  # noqa: PLR0915
         if len(lines) == 1:
             response_subject = lines[0]
             content = ""
-        elif len(lines) > 2 and not lines[1].strip():  # noqa: PLR2004
+        elif len(lines) > 2 and len(lines[0]) < 20 and not lines[1].strip():  # noqa: PLR2004
             response_subject = lines[0]
             content = "\n".join(lines[2:])
         else:
