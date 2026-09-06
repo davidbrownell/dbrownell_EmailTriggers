@@ -11,7 +11,12 @@ description = "Scripts run when email is received."
 readme = "README.md"
 authors = [{ name = "Dave Brownell", email = "github@DavidBrownell.com" }]
 requires-python = ">= 3.14"
-dependencies = []
+dependencies = [
+    "dbrownell-common>=0.17.3",
+    "pydantic>=2.13.5",
+    "pyyaml>=6.0.3",
+    "typer>=0.27.2",
+]
 classifiers = [
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
@@ -59,6 +64,8 @@ ignore = [
     "ANN003", # Missing type annotation for `**kwargs`
     "BLE001", # Do not catch blind exception: `Exception`
     "COM812", # Trailing comma missing
+    "CPY001", # Missing copyright notice at the top of the file
+    "D100",   # Missing docstring in public module
     "D105",   # Missing docstring in magic method
     "D107",   # Missing docstring in `__init__` method
     "D202",   # No blank lines allowed after function docstring
