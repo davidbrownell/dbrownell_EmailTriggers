@@ -1,30 +1,49 @@
-{
-  "name": "example.com",
-  "mail_server": "mail.example.com",
-  "response_email_address": "email-triggers@example.com",
-  "port": 993,
-  "users": [
-    {
-      "name": "alice@example.com",
-      "scripts": [
-        {
-          "name": "backup",
-          "command_line_template": "python /opt/scripts/backup.py --target \"{subject}\""
-        },
-        {
-          "name": "deploy",
-          "command_line_template": "/opt/scripts/deploy.sh {body}"
-        }
-      ]
-    },
-    {
-      "name": "bob@example.com",
-      "scripts": [
-        {
-          "name": "status",
-          "command_line_template": "python /opt/scripts/status.py"
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "name": "example.com",
+    "mail_server": "mail.example.com",
+    "response_email_address": "email-triggers@example.com",
+    "port": 993,
+    "users": [
+      {
+        "name": "alice@example.com",
+        "scripts": [
+          {
+            "name": "backup",
+            "command_line_template": "python /opt/scripts/backup.py --target \"{subject}\""
+          },
+          {
+            "name": "deploy",
+            "command_line_template": "/opt/scripts/deploy.sh {body}"
+          }
+        ]
+      },
+      {
+        "name": "bob@example.com",
+        "scripts": [
+          {
+            "name": "status",
+            "command_line_template": "python /opt/scripts/status.py"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "other.com",
+    "mail_server": "mail.other.com",
+    "response_email_address": "email-triggers@other.com",
+    "port": null,
+    "users": [
+      {
+        "name": "carol@other.com",
+        "scripts": [
+          {
+            "name": "status",
+            "command_line_template": "python /opt/scripts/status.py"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -78,6 +78,24 @@ def _AssertMatchesSampleContent(domain_info: DomainInfo) -> None:
 
 
 # ----------------------------------------------------------------------
+def _AssertMatchesSampleFile(domain_infos: list[DomainInfo]) -> None:
+    assert len(domain_infos) == 2
+
+    _AssertMatchesSampleContent(domain_infos[0])
+
+    other = domain_infos[1]
+
+    assert other.name == "other.com"
+    assert other.mail_server == "mail.other.com"
+    assert other.response_email_address == "email-triggers@other.com"
+    assert other.port is None
+
+    assert len(other.users) == 1
+    assert other.users[0].name == "carol@other.com"
+    assert other.users[0].scripts == [ScriptInfo("status", "python /opt/scripts/status.py")]
+
+
+# ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 class TestScriptInfo:
@@ -156,6 +174,7 @@ class TestDomainInfo:
     # ----------------------------------------------------------------------
     def test_NoPort(self):
         assert DomainInfo("example.com", "mail.example.com", "a@example.com", [], None).port is None
+        assert DomainInfo("example.com", "mail.example.com", "a@example.com", []).port is None
 
     # ----------------------------------------------------------------------
     def test_Frozen(self):
@@ -165,7 +184,7 @@ class TestDomainInfo:
             setattr(domain_info, "name", "other.com")
 
     # ----------------------------------------------------------------------
-    def test_PortIsRequired(self):
+    def test_PortIsOptional(self):
         data_without_port: object = {
             "name": "example.com",
             "mail_server": "mail.example.com",
@@ -173,19 +192,18 @@ class TestDomainInfo:
             "users": [],
         }
 
-        with pytest.raises(ValidationError, match="port"):
-            DOMAIN_INFO_ADAPTER.validate_python(data_without_port)
+        assert DOMAIN_INFO_ADAPTER.validate_python(data_without_port).port is None
 
 
 # ----------------------------------------------------------------------
 class TestFromFile:
     # ----------------------------------------------------------------------
     def test_YamlSample(self):
-        _AssertMatchesSampleContent(DomainInfo.FromFile(SAMPLES_DIR / "domain_info.yaml"))
+        _AssertMatchesSampleFile(DomainInfo.FromFile(SAMPLES_DIR / "domain_info.yaml"))
 
     # ----------------------------------------------------------------------
     def test_JsonSample(self):
-        _AssertMatchesSampleContent(DomainInfo.FromFile(SAMPLES_DIR / "domain_info.json"))
+        _AssertMatchesSampleFile(DomainInfo.FromFile(SAMPLES_DIR / "domain_info.json"))
 
     # ----------------------------------------------------------------------
     def test_SamplesAreEquivalent(self):
@@ -197,26 +215,51 @@ class TestFromFile:
     @pytest.mark.parametrize("suffix", [".yaml", ".yml", ".YAML", ".YML", ".Yml"])
     def test_YamlSuffixes(self, tmp_path, domain_data, suffix):
         filename = tmp_path / f"domain_info{suffix}"
-        filename.write_text(yaml.safe_dump(domain_data), encoding="utf-8")
+        filename.write_text(yaml.safe_dump([domain_data]), encoding="utf-8")
 
-        _AssertMatchesSampleContent(DomainInfo.FromFile(filename))
+        domain_infos = DomainInfo.FromFile(filename)
+
+        assert len(domain_infos) == 1
+        _AssertMatchesSampleContent(domain_infos[0])
 
     # ----------------------------------------------------------------------
     @pytest.mark.parametrize("suffix", [".json", ".JSON", ".Json"])
     def test_JsonSuffixes(self, tmp_path, domain_data, suffix):
         filename = tmp_path / f"domain_info{suffix}"
-        filename.write_text(json.dumps(domain_data), encoding="utf-8")
+        filename.write_text(json.dumps([domain_data]), encoding="utf-8")
 
-        _AssertMatchesSampleContent(DomainInfo.FromFile(filename))
+        domain_infos = DomainInfo.FromFile(filename)
+
+        assert len(domain_infos) == 1
+        _AssertMatchesSampleContent(domain_infos[0])
+
+    # ----------------------------------------------------------------------
+    def test_MultipleDomains(self, tmp_path, domain_data):
+        other_data = dict(domain_data, name="other.com", mail_server="mail.other.com")
+
+        filename = tmp_path / "domain_info.yaml"
+        filename.write_text(yaml.safe_dump([domain_data, other_data]), encoding="utf-8")
+
+        assert [domain_info.name for domain_info in DomainInfo.FromFile(filename)] == [
+            "example.com",
+            "other.com",
+        ]
+
+    # ----------------------------------------------------------------------
+    def test_NoDomains(self, tmp_path):
+        filename = tmp_path / "domain_info.json"
+        filename.write_text("[]", encoding="utf-8")
+
+        assert DomainInfo.FromFile(filename) == []
 
     # ----------------------------------------------------------------------
     def test_NoPort(self, tmp_path, domain_data):
         domain_data["port"] = None
 
         filename = tmp_path / "domain_info.yaml"
-        filename.write_text(yaml.safe_dump(domain_data), encoding="utf-8")
+        filename.write_text(yaml.safe_dump([domain_data]), encoding="utf-8")
 
-        assert DomainInfo.FromFile(filename).port is None
+        assert DomainInfo.FromFile(filename)[0].port is None
 
     # ----------------------------------------------------------------------
     @pytest.mark.parametrize("suffix", ["", ".txt", ".xml", ".toml", ".yamlx"])
@@ -247,7 +290,7 @@ class TestFromFile:
         del domain_data["mail_server"]
 
         filename = tmp_path / "domain_info.yaml"
-        filename.write_text(yaml.safe_dump(domain_data), encoding="utf-8")
+        filename.write_text(yaml.safe_dump([domain_data]), encoding="utf-8")
 
         with pytest.raises(ValidationError, match="mail_server"):
             DomainInfo.FromFile(filename)
@@ -257,7 +300,7 @@ class TestFromFile:
         domain_data["port"] = "not a port"
 
         filename = tmp_path / "domain_info.json"
-        filename.write_text(json.dumps(domain_data), encoding="utf-8")
+        filename.write_text(json.dumps([domain_data]), encoding="utf-8")
 
         with pytest.raises(ValidationError, match="port"):
             DomainInfo.FromFile(filename)
@@ -267,7 +310,7 @@ class TestFromFile:
         del domain_data["users"][0]["scripts"][0]["command_line_template"]
 
         filename = tmp_path / "domain_info.yaml"
-        filename.write_text(yaml.safe_dump(domain_data), encoding="utf-8")
+        filename.write_text(yaml.safe_dump([domain_data]), encoding="utf-8")
 
         with pytest.raises(ValidationError, match="command_line_template"):
             DomainInfo.FromFile(filename)
@@ -275,7 +318,15 @@ class TestFromFile:
     # ----------------------------------------------------------------------
     def test_InvalidContent(self, tmp_path):
         filename = tmp_path / "domain_info.yaml"
-        filename.write_text("this is a string, not a mapping", encoding="utf-8")
+        filename.write_text("this is a string, not a list", encoding="utf-8")
+
+        with pytest.raises(ValidationError):
+            DomainInfo.FromFile(filename)
+
+    # ----------------------------------------------------------------------
+    def test_SingleDomainIsNotAList(self, tmp_path, domain_data):
+        filename = tmp_path / "domain_info.yaml"
+        filename.write_text(yaml.safe_dump(domain_data), encoding="utf-8")
 
         with pytest.raises(ValidationError):
             DomainInfo.FromFile(filename)
