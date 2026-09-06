@@ -21,7 +21,8 @@ from dbrownell_EmailTriggers.lib.domain_info import DomainInfo, UserInfo, Script
 
 
 # ----------------------------------------------------------------------
-LOG_FILENAME = Path(__file__).with_suffix(".log")
+LOG_FILENAME = Path(__file__).parent.parent.with_suffix(".log")  # Repo root
+assert (LOG_FILENAME.parent / ".git").is_dir(), LOG_FILENAME.parent
 
 
 # ----------------------------------------------------------------------
