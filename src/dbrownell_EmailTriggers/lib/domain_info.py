@@ -38,12 +38,12 @@ class DomainInfo:
     mail_server: str
     response_email_address: str
     users: list[UserInfo]
-    port: int | None
+    port: int | None = None
 
     # ----------------------------------------------------------------------
     @staticmethod
-    def FromFile(filename: Path) -> DomainInfo:
-        """Create an instance of this class based on the contents of the specified file."""
+    def FromFile(filename: Path) -> list[DomainInfo]:
+        """Create instances of this class based on the contents of the specified file."""
 
         if filename.suffix.lower() in (".yaml", ".yml"):
             read_func = yaml.safe_load
@@ -56,10 +56,10 @@ class DomainInfo:
         with filename.open(encoding="utf-8") as f:
             content = read_func(f)
 
-        return _domain_type_adapter.validate_python(content)
+        return _domain_list_type_adapter.validate_python(content)
 
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
-_domain_type_adapter = TypeAdapter(DomainInfo)
+_domain_list_type_adapter = TypeAdapter(list[DomainInfo])
