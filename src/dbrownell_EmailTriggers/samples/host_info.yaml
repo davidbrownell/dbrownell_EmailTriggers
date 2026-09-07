@@ -1,0 +1,5 @@
+hostname: hosting.example.com
+username: example_user
+
+# Do not commit files that contain real API tokens.
+cpanel_api_token: example_token
